@@ -2,8 +2,8 @@ name: Run Telegram Bot
 
 on:
   schedule:
-    - cron: "*/5 * * * *"  
-  workflow_dispatch:  
+    - cron: "*/5 * * * *"  # Runs every 5 minutes
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   run-bot:
@@ -15,10 +15,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  
+          python-version: "3.10"
 
       - name: Install dependencies
         run: pip install telethon
 
       - name: Run bot
-        run: python bot.py  # מריץ את הבוט
+        env:
+          TELEGRAM_API_ID: ${{ secrets.API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.API_HASH }}
+        run: python bot.py
