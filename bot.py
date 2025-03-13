@@ -15,9 +15,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ✅ Get API Credentials from Environment Variables (GitHub Secrets)
-API_ID = int(os.getenv("TELEGRAM_API_ID"))  # Store in GitHub Secrets
-API_HASH = os.getenv("TELEGRAM_API_HASH")   # Store in GitHub Secrets
+API_ID = os.getenv("TELEGRAM_API_ID")
+API_HASH = os.getenv("TELEGRAM_API_HASH")
+
+# ✅ Ensure variables exist before converting
+if not API_ID or not API_HASH:
+    raise ValueError("❌ Missing TELEGRAM_API_ID or TELEGRAM_API_HASH in environment variables!")
+
+API_ID = int(API_ID)  # ✅ Convert AFTER checking it's not None
 
 # ✅ Source Channels (Using Usernames)
 SOURCE_CHANNELS = [
