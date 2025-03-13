@@ -1,33 +1,94 @@
 from telethon import TelegramClient, events
+from telethon.tl.functions.messages import GetHistoryRequest
 import logging
 import sys
+import asyncio
+import os
+import json
+import time
 
-# Configure logging
+# ✅ Configure Logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
 
-API_ID = 25327295
-API_HASH = "cbfa427495645e7bb7b8fe2a8da9fd9b"
+# ✅ Get API Credentials from Environment Variables (GitHub Secrets)
+API_ID = int(os.getenv("TELEGRAM_API_ID"))  # Store in GitHub Secrets
+API_HASH = os.getenv("TELEGRAM_API_HASH")   # Store in GitHub Secrets
 
-# Source channels (using usernames)
+# ✅ Source Channels (Using Usernames)
 SOURCE_CHANNELS = [
-    "@techjobtracker_il",
-    "@HiTech_Jobs_In_Israel",
-    "@bafosssssss",
+    "@techjobtracker_il", "@HiTech_Jobs_In_Israel", "@bafosssssss",
+    "@Nisancommunity"
 ]
 
-# Target channel
+# ✅ Target Channel (Where messages will be forwarded)
 TARGET_CHANNEL_ID = -1002415944739
 
-# ✅ Keywords to filter messages
-KEYWORDS = ["student", "intern", "internship", "junior"]
+# ✅ Keywords to Filter Messages
+KEYWORDS = [
+    "student", "intern", "internship", "junior", "entry-level", "graduate",
+    "trainee", "no experience", "first job", "סטודנט", "משרת סטודנט",
+    "ג'וניור", "ללא ניסיון", "משרת התחלה", "התמחות", "התמחות בתשלום",
+    "משרה חלקית", "משרה ללא ניסיון", "משרת ג'וניור", "משרה התחלתית",
+    "תוכנית התמחות"
+]
+
+# ✅ JSON file for tracking forwarded messages
+MESSAGE_TRACKER_FILE = "message_tracker.json"
+
+# ✅ Ensure JSON file exists
+if not os.path.exists(MESSAGE_TRACKER_FILE):
+    with open(MESSAGE_TRACKER_FILE, "w") as file:
+        json.dump({"messages": {}}, file)
+
+# ✅ Load and Save Message History
+def load_message_history():
+    with open(MESSAGE_TRACKER_FILE, "r") as file:
+        return json.load(file)
+
+def save_message_history(data):
+    with open(MESSAGE_TRACKER_FILE, "w") as file:
+        json.dump(data, file)
+
+# ✅ Function to clear history every 7 days
+def clear_old_messages():
+    data = load_message_history()
+    now = time.time()
+    data["messages"] = {key: timestamp for key, timestamp in data["messages"].items() if now - timestamp < 604800}
+    save_message_history(data)
+
+async def fetch_recent_messages(client):
+    """Fetch last 100 messages from all source channels."""
+    logger.info("🔄 Fetching recent messages from source channels...")
+    data = load_message_history()
+
+    for channel in SOURCE_CHANNELS:
+        try:
+            entity = await client.get_entity(channel)
+            history = await client(GetHistoryRequest(peer=entity, limit=100, offset_date=None, offset_id=0, max_id=0, min_id=0, add_offset=0, hash=0))
+
+            for message in history.messages:
+                if message.message:
+                    message_text = message.message.lower()
+                    msg_id = message.id
+                    chat_id = entity.id
+                    msg_key = f"{chat_id}-{msg_id}"  
+
+                    if any(keyword in message_text for keyword in KEYWORDS):
+                        if msg_key not in data["messages"]:
+                            logger.info(f"📩 Found relevant past message in {channel}, forwarding...")
+                            await client.forward_messages(TARGET_CHANNEL_ID, message)
+                            data["messages"][msg_key] = time.time()
+                            save_message_history(data)
+        except Exception as e:
+            logger.error(f"❌ Failed to fetch messages from {channel}: {str(e)}")
 
 async def main():
-    """Initialize the bot and listen for messages."""
+    """Initialize the Telegram client and listen for messages."""
     client = TelegramClient("user_session", API_ID, API_HASH)
 
     logger.info("🚀 Connecting to Telegram...")
@@ -36,40 +97,18 @@ async def main():
 
     logger.info(f"🔎 Listening to channels: {SOURCE_CHANNELS}")
 
-    @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
-    async def forward_filtered_messages(event):
-        try:
-            chat = await event.get_chat()
-            chat_name = chat.title if hasattr(chat, "title") else "Unknown"
-            chat_id = event.chat_id
-            message_text = event.text.lower() if event.text else ""
+    # 🔄 Fetch old messages before running
+    await fetch_recent_messages(client)
 
-            logger.info(f"📩 New message from: {chat_name} (ID: {chat_id})")
-
-            # 🔍 Check if the message contains a keyword
-            if any(keyword in message_text for keyword in KEYWORDS):
-                logger.info(f"✅ Message contains keyword, forwarding: {message_text[:50]}...")
-                await client.forward_messages(TARGET_CHANNEL_ID, event.message)
-                logger.info("✅ Message successfully forwarded!")
-            else:
-                logger.info("🚫 Message does not contain keywords, ignoring.")
-
-        except Exception as e:
-            logger.error(f"❌ Error forwarding message: {str(e)}")
-
-    logger.info("✅ Bot is now running and waiting for messages.")
-    await client.run_until_disconnected()
+    logger.info("✅ Bot execution completed. Exiting...")
+    await client.disconnect()
 
 if __name__ == "__main__":
-    import asyncio
-
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-
     try:
+        clear_old_messages()
         loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        logger.info("🛑 Bot stopped manually.")
     except Exception as e:
         logger.error(f"🚨 Unexpected error: {str(e)}")
     finally:
