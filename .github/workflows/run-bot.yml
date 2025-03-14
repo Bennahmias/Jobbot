@@ -36,5 +36,5 @@ jobs:
       - name: Upload updated message history
         uses: actions/upload-artifact@v3
         with:
-          name: message-tracker
+          name: message_tracker
           path: message_tracker.json
