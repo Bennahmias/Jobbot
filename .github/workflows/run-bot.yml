@@ -21,7 +21,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Download previous message history
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v3  # ✅ Ensure correct version
         continue-on-error: true  # ✅ Prevents failure if artifact is missing
         with:
           name: message_tracker
@@ -35,7 +35,7 @@ jobs:
         run: python bot.py
 
       - name: Upload updated message history
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3  # ✅ Ensure correct version
         with:
           name: message_tracker 
           path: message_tracker.json
