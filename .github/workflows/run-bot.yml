@@ -3,7 +3,7 @@ name: Run Telegram Bot
 on:
   schedule:
     - cron: "*/5 * * * *"  # Runs every 5 minutes
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Allows manual execution
 
 jobs:
   run-bot:
@@ -15,13 +15,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'  
 
       - name: Install dependencies
-        run: pip install telethon
+        run: pip install -r requirements.txt  # If you have a requirements file
 
       - name: Run bot
         env:
           TELEGRAM_API_ID: ${{ secrets.API_ID }}
           TELEGRAM_API_HASH: ${{ secrets.API_HASH }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}  # ✅ Ensure SESSION_STRING is passed
         run: python bot.py
