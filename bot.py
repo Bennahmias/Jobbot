@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 from telethon.tl.functions.messages import GetHistoryRequest
 import logging
 import sys
@@ -15,14 +16,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-API_ID = os.getenv("TELEGRAM_API_ID")
-API_HASH = os.getenv("TELEGRAM_API_HASH")
+# ✅ Get API Credentials from Environment Variables (GitHub Secrets)
+SESSION_STRING = os.getenv("SESSION_STRING")  # Store in GitHub Secrets
 
-# ✅ Ensure variables exist before converting
-if not API_ID or not API_HASH:
-    raise ValueError("❌ Missing TELEGRAM_API_ID or TELEGRAM_API_HASH in environment variables!")
-
-API_ID = int(API_ID)  # ✅ Convert AFTER checking it's not None
+if not SESSION_STRING:
+    raise ValueError("❌ Missing SESSION_STRING in environment variables!")
 
 # ✅ Source Channels (Using Usernames)
 SOURCE_CHANNELS = [
@@ -94,7 +92,7 @@ async def fetch_recent_messages(client):
 
 async def main():
     """Initialize the Telegram client and listen for messages."""
-    client = TelegramClient("user_session", API_ID, API_HASH)
+    client = TelegramClient(StringSession(SESSION_STRING), 25327295, "cbfa427495645e7bb7b8fe2a8da9fd9b")
 
     logger.info("🚀 Connecting to Telegram...")
     await client.start()
