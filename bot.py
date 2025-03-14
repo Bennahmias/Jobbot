@@ -1,5 +1,5 @@
 from telethon import TelegramClient, events
-from telethon.sessions import StringSession  # ✅ Fix: Import StringSession
+from telethon.sessions import StringSession
 from telethon.tl.functions.messages import GetHistoryRequest
 import logging
 import sys
@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 # ✅ Get API Credentials from Environment Variables (GitHub Secrets)
 API_ID = os.getenv("TELEGRAM_API_ID")
 API_HASH = os.getenv("TELEGRAM_API_HASH")
-SESSION_STRING = os.getenv("SESSION_STRING")  # ✅ Load session from GitHub Secret
+SESSION_STRING = os.getenv("SESSION_STRING")
 
-# ✅ Ensure required environment variables exist
+# ✅ Ensure required variables exist
 if not API_ID or not API_HASH or not SESSION_STRING:
     raise ValueError("❌ Missing TELEGRAM_API_ID, TELEGRAM_API_HASH, or SESSION_STRING!")
 
-API_ID = int(API_ID)  # ✅ Convert AFTER checking it's not None
+API_ID = int(API_ID)  # Convert AFTER checking it's not None
 
 # ✅ Source Channels (Using Usernames)
 SOURCE_CHANNELS = [
@@ -97,7 +97,7 @@ async def fetch_recent_messages(client):
 
 async def main():
     """Initialize the Telegram client and listen for messages."""
-    client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)  # ✅ Use session string
+    client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
     logger.info("🚀 Connecting to Telegram...")
     await client.start()
@@ -108,39 +108,13 @@ async def main():
     # 🔄 Fetch old messages before running
     await fetch_recent_messages(client)
 
-    @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
-    async def forward_filtered_messages(event):
-        """Filters and forwards messages containing specific keywords."""
-        try:
-            chat = await event.get_chat()
-            chat_id = chat.id
-            msg_id = event.message.id
-            msg_key = f"{chat_id}-{msg_id}"  # Unique message key
-
-            message_text = event.text.lower() if event.text else ""
-            logger.info(f"📩 New message from: {chat.title} (ID: {chat_id})")
-
-            # Check if message was already forwarded
-            data = load_message_history()
-            if msg_key in data["messages"]:
-                logger.info("🚫 Duplicate message detected, skipping.")
-                return
-
-            # 🔍 Check if the message contains a keyword
-            if any(keyword in message_text for keyword in KEYWORDS):
-                logger.info(f"✅ Message contains keyword, forwarding...")
-                await client.forward_messages(TARGET_CHANNEL_ID, event.message)
-                data["messages"][msg_key] = time.time()
-                save_message_history(data)
-                logger.info("✅ Message successfully forwarded!")
-            else:
-                logger.info("🚫 Message does not contain keywords, ignoring.")
-
-        except Exception as e:
-            logger.error(f"❌ Error forwarding message: {str(e)}")
-
     logger.info("✅ Bot is now running and waiting for messages.")
-    await client.run_until_disconnected()
+
+    # ✅ Set Timeout (Auto-exit after 2 minutes)
+    await asyncio.sleep(60)  # ✅ Runs for 1 minutes (60 sec) and then exits
+
+    logger.info("🛑 Exiting bot after timeout.")
+    await client.disconnect()
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
