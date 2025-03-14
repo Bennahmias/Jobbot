@@ -48,19 +48,26 @@ KEYWORDS = [
 # ✅ JSON file for tracking forwarded messages
 MESSAGE_TRACKER_FILE = "message_tracker.json"
 
-# ✅ Ensure JSON file exists
+# ✅ Ensure JSON file exists or create it
 if not os.path.exists(MESSAGE_TRACKER_FILE):
     with open(MESSAGE_TRACKER_FILE, "w") as file:
         json.dump({"messages": {}}, file)
 
 # ✅ Load and Save Message History
 def load_message_history():
-    with open(MESSAGE_TRACKER_FILE, "r") as file:
-        return json.load(file)
+    try:
+        with open(MESSAGE_TRACKER_FILE, "r") as file:
+            return json.load(file)
+    except (json.JSONDecodeError, FileNotFoundError):
+        return {"messages": {}}
 
 def save_message_history(data):
-    with open(MESSAGE_TRACKER_FILE, "w") as file:
-        json.dump(data, file)
+    try:
+        with open(MESSAGE_TRACKER_FILE, "w") as file:
+            json.dump(data, file, indent=4)
+        logger.info("💾 Message history saved successfully.")
+    except Exception as e:
+        logger.error(f"❌ Failed to save message history: {str(e)}")
 
 # ✅ Function to clear history every 7 days
 def clear_old_messages():
@@ -110,8 +117,8 @@ async def main():
 
     logger.info("✅ Bot is now running and waiting for messages.")
 
-    # ✅ Set Timeout (Auto-exit after 2 minutes)
-    await asyncio.sleep(60)  # ✅ Runs for 1 minutes (60 sec) and then exits
+    # ✅ Set Timeout (Auto-exit after 1 minute)
+    await asyncio.sleep(60)
 
     logger.info("🛑 Exiting bot after timeout.")
     await client.disconnect()
