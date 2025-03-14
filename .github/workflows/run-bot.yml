@@ -18,7 +18,8 @@ jobs:
           python-version: '3.10'  
 
       - name: Install dependencies
-        run: pip install -r requirements.txt  # If you have a requirements file
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "❌ requirements.txt not found"; exit 1; fi
 
       - name: Run bot
         env:
