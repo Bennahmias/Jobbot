@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # ✅ Allows commits back to the repo
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -20,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Ensure message_tracker.json exists  # ✅ Create if missing
+      - name: Ensure message_tracker.json exists
         run: |
           if [ ! -f message_tracker.json ]; then
             echo '{}' > message_tracker.json  # Creates an empty JSON file
@@ -33,8 +35,10 @@ jobs:
           SESSION_STRING: ${{ secrets.SESSION_STRING }}
         run: python bot.py
 
-      - name: Upload updated message history
-        uses: actions/upload-artifact@v2  # ⬅ Changed from v3 to v2
-        with:
-          name: message_tracker
-          path: message_tracker.json
+      - name: Commit and Push Changes  # ✅ Save updated message history
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add message_tracker.json
+          git commit -m "Update message_tracker.json [Bot Run]" || echo "No changes to commit"
+          git push
