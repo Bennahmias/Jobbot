@@ -48,27 +48,28 @@ KEYWORDS = [
 # ✅ JSON file for tracking forwarded messages
 MESSAGE_TRACKER_FILE = "message_tracker.json"
 
-# ✅ Ensure message history file always exists
+# ✅ Ensure JSON file exists
 if not os.path.exists(MESSAGE_TRACKER_FILE):
-    logger.warning("⚠️ message_tracker.json not found, creating a new one...")
     with open(MESSAGE_TRACKER_FILE, "w") as file:
         json.dump({"messages": {}}, file)
 
 # ✅ Load and Save Message History
 def load_message_history():
+    """Loads message history from the JSON file."""
     try:
         with open(MESSAGE_TRACKER_FILE, "r") as file:
             return json.load(file)
-    except json.JSONDecodeError:
-        logger.warning("⚠️ message_tracker.json corrupted, resetting file...")
+    except (FileNotFoundError, json.JSONDecodeError):
         return {"messages": {}}
 
 def save_message_history(data):
+    """Saves message history to the JSON file."""
     with open(MESSAGE_TRACKER_FILE, "w") as file:
         json.dump(data, file)
 
 # ✅ Function to clear history every 7 days
 def clear_old_messages():
+    """Removes messages older than 7 days from history."""
     data = load_message_history()
     now = time.time()
     data["messages"] = {key: timestamp for key, timestamp in data["messages"].items() if now - timestamp < 604800}
@@ -89,7 +90,7 @@ async def fetch_recent_messages(client):
                     message_text = message.message.lower()
                     msg_id = message.id
                     chat_id = entity.id
-                    msg_key = f"{chat_id}-{msg_id}"  
+                    msg_key = f"{chat_id}-{msg_id}"
 
                     if any(keyword in message_text for keyword in KEYWORDS):
                         if msg_key not in data["messages"]:
@@ -115,8 +116,8 @@ async def main():
 
     logger.info("✅ Bot is now running and waiting for messages.")
 
-    # ✅ Set Timeout (Auto-exit after 1 minute)
-    await asyncio.sleep(60)  # ✅ Runs for 1 minute (60 sec) and then exits
+    # ✅ Auto-exit after 2 minutes to allow GitHub Actions to finish
+    await asyncio.sleep(120)  # Runs for 2 minutes (120 sec) and then exits
 
     logger.info("🛑 Exiting bot after timeout.")
     await client.disconnect()
