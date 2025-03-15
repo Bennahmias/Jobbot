@@ -20,16 +20,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Download previous message history  # ✅ Ensure message history persists
-        uses: actions/download-artifact@v3
-        with:
-          name: message_tracker
-          path: .
-
-      - name: Ensure message_tracker.json exists
+      - name: Ensure message_tracker.json exists  # ✅ Create if missing
         run: |
           if [ ! -f message_tracker.json ]; then
-            echo '{"messages": {}}' > message_tracker.json
+            echo '{}' > message_tracker.json  # Creates an empty JSON file
           fi
 
       - name: Run bot
@@ -39,7 +33,7 @@ jobs:
           SESSION_STRING: ${{ secrets.SESSION_STRING }}
         run: python bot.py
 
-      - name: Upload updated message history  # ✅ Save message history
+      - name: Upload updated message history
         uses: actions/upload-artifact@v3
         with:
           name: message_tracker
