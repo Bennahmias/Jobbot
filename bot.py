@@ -116,8 +116,8 @@ async def main():
 
     logger.info("✅ Bot is now running and waiting for messages.")
 
-    # ✅ Auto-exit after 2 minutes to allow GitHub Actions to finish
-    await asyncio.sleep(120)  # Runs for 2 minutes (120 sec) and then exits
+    # ✅ Auto-exit 
+    await asyncio.sleep(30)  # Runs for 30 sec
 
     logger.info("🛑 Exiting bot after timeout.")
     await client.disconnect()
