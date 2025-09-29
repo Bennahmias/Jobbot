@@ -38,8 +38,8 @@ TARGET_CHANNEL_ID = -1002415944739
 
 # ✅ Keywords to Filter Messages
 KEYWORDS = [
-    "student", "intern", "internship", "junior", "entry-level", "graduate",
-    "trainee", "no experience", "first job", "סטודנט", "משרת סטודנט",
+    "intern", "internship", "junior", "entry-level", "graduate",
+    "trainee", "no experience", "first job",
     "ג'וניור", "ללא ניסיון", "משרת התחלה", "התמחות", "התמחות בתשלום",
     "משרה חלקית", "משרה ללא ניסיון", "משרת ג'וניור", "משרה התחלתית",
     "תוכנית התמחות"
@@ -135,3 +135,4 @@ if __name__ == "__main__":
     finally:
         loop.close()
         logger.info("🔴 Bot has shut down.")
+
