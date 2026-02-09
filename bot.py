@@ -38,9 +38,8 @@ TARGET_CHANNEL_ID = -1002415944739
 
 # ✅ Keywords to Filter Messages
 KEYWORDS = [
-    "intern", "internship", "junior", "entry-level", "graduate",
-    "trainee", "no experience", "first job",
-    "ג'וניור", "ללא ניסיון", "משרת התחלה", "התמחות", "התמחות בתשלום",
+    "devops junior", "junior devops","Entry-level Devops", "junior", "entry-level", "graduate", "no experience", "first job",
+    "ג'וניור", "ללא ניסיון",
     "משרה חלקית", "משרה ללא ניסיון", "משרת ג'וניור", "משרה התחלתית",
     "תוכנית התמחות"
 ]
